@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>太空船主控台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700;900&family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: #030712; /* Deep slate */
+            background-image: 
+                linear-gradient(rgba(6, 182, 212, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(6, 182, 212, 0.05) 1px, transparent 1px);
+            background-size: 30px 30px;
+            color: #e2e8f0;
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow-x: hidden;
+        }
+
+        .sci-fi-title {
+            font-family: 'Orbitron', 'Noto Sans TC', sans-serif;
+            text-shadow: 0 0 10px rgba(6, 182, 212, 0.8), 0 0 20px rgba(6, 182, 212, 0.5);
+            letter-spacing: 4px;
+        }
+
+        .panel-container {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            box-shadow: 0 0 30px rgba(6, 182, 212, 0.15), inset 0 0 20px rgba(6, 182, 212, 0.05);
+            position: relative;
+        }
+        
+        .panel-container::before, .panel-container::after {
+            content: '';
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #06b6d4;
+            transition: all 0.3s ease;
+        }
+        .panel-container::before {
+            top: -2px;
+            left: -2px;
+            border-right: none;
+            border-bottom: none;
+        }
+        .panel-container::after {
+            bottom: -2px;
+            right: -2px;
+            border-left: none;
+            border-top: none;
+        }
+
+        .input-scifi {
+            background: rgba(8, 145, 178, 0.1);
+            border: 1px solid rgba(6, 182, 212, 0.4);
+            color: #67e8f9;
+            box-shadow: inset 0 0 10px rgba(6, 182, 212, 0.1);
+            transition: all 0.3s ease;
+        }
+        .input-scifi:focus {
+            outline: none;
+            border-color: #22d3ee;
+            box-shadow: 0 0 15px rgba(34, 211, 238, 0.4), inset 0 0 15px rgba(34, 211, 238, 0.2);
+            background: rgba(8, 145, 178, 0.2);
+        }
+        .input-scifi::placeholder {
+            color: rgba(103, 232, 249, 0.4);
+            font-size: 0.9rem;
+        }
+
+        select option {
+            background-color: #0f172a; 
+            color: #67e8f9;
+            font-weight: bold;
+        }
+
+        .btn-scifi {
+            background: linear-gradient(45deg, transparent 5%, #0891b2 5%);
+            border: none;
+            color: #fff;
+            box-shadow: 6px 0px 0px #000;
+            transition: all 0.2s ease;
+            text-shadow: 0 0 5px rgba(255, 255, 255, 0.5);
+        }
+        .btn-scifi:hover {
+            background: linear-gradient(45deg, transparent 5%, #06b6d4 5%);
+            box-shadow: 6px 0px 0px rgba(6, 182, 212, 0.6), 0 0 20px rgba(6, 182, 212, 0.5);
+            transform: translateY(-2px);
+        }
+        .btn-scifi:active {
+            transform: translateY(0);
+            box-shadow: 3px 0px 0px #000;
+        }
+
+        .terminal {
+            font-family: 'Courier New', Courier, monospace;
+            background: #000;
+            border-left: 4px solid #22c55e;
+            text-shadow: 0 0 5px rgba(34, 197, 94, 0.5);
+        }
+
+        .typewriter-text {
+            overflow: hidden;
+            white-space: pre-wrap;
+            margin: 0 auto;
+            border-right: .15em solid orange;
+            animation: blink-caret .75s step-end infinite;
+        }
+
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: #22c55e; }
+        }
+
+        /* 圖片下拉選單專屬樣式 */
+        .custom-dropdown {
+            position: relative;
+            cursor: pointer;
+        }
+        .dropdown-options {
+            display: none;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #0f172a;
+            border: 1px solid rgba(6, 182, 212, 0.6);
+            z-index: 50;
+            max-height: 250px;
+            overflow-y: auto;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.8);
+        }
+        .dropdown-options.show {
+            display: block;
+        }
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            border-bottom: 1px solid rgba(6, 182, 212, 0.15);
+            transition: background 0.2s;
+        }
+        .dropdown-item:hover {
+            background: rgba(8, 145, 178, 0.3);
+        }
+        .dropdown-item img {
+            width: 32px;
+            height: 32px;
+            object-fit: cover;
+            border-radius: 4px;
+            margin-right: 10px;
+            border: 1px solid #06b6d4;
+        }
+
+        /* Status LEDs */
+        .led {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            box-shadow: 0 0 8px currentColor;
+        }
+        .led-green { background-color: #22c55e; color: #22c55e; animation: pulse 2s infinite; }
+        .led-red { background-color: #ef4444; color: #ef4444; animation: blink 1s infinite; }
+        .led-blue { background-color: #3b82f6; color: #3b82f6; }
+
+        @keyframes pulse {
+            0% { opacity: 0.6; box-shadow: 0 0 5px currentColor; }
+            50% { opacity: 1; box-shadow: 0 0 15px currentColor; }
+            100% { opacity: 0.6; box-shadow: 0 0 5px currentColor; }
+        }
+        @keyframes blink {
+            0%, 49% { opacity: 1; }
+            50%, 100% { opacity: 0.2; }
+        }
+
+        .message-box {
+            clip-path: polygon(10px 0, 10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8">
+
+    <!-- 頂部狀態列 -->
+    <div class="web-header w-full max-w-6xl flex justify-between items-center mb-8 px-4 border-b border-cyan-800 pb-2">
+        <div class="flex items-center space-x-4">
+            <span class="font-bold text-cyan-500 tracking-wider">SYS_ID: 5107</span>
+            <div class="flex space-x-2">
+                <span class="led led-green"></span>
+                <span class="led led-blue"></span>
+                <span class="led led-red"></span>
+            </div>
+        </div>
+        <div class="text-xs text-cyan-600 font-mono tracking-widest hidden sm:block">
+            SECURITY LEVEL: MAXIMUM // OVERRIDE REQUIRED
+        </div>
+    </div>
+
+    <!-- 主控台面板 -->
+    <main class="panel-container w-full max-w-5xl rounded-lg p-6 sm:p-10 z-10 flex flex-col items-center">
+        
+        <h1 class="sci-fi-title text-3xl sm:text-5xl font-black text-cyan-400 mb-2 uppercase text-center">
+            主控台
+        </h1>
+        <p class="text-cyan-600 text-sm tracking-widest mb-10 text-center">MAIN COMMAND CONSOLE // AWAITING INPUT</p>
+
+        <!-- 動態訊息系統 (終端機) -->
+        <div class="terminal w-full p-4 mb-10 rounded-sm bg-black/80 text-green-400 text-sm sm:text-base shadow-inner">
+            <div class="flex justify-between border-b border-green-800 mb-2 pb-1">
+                <span class="text-xs font-bold text-green-600">系統訊息</span>
+                <span class="text-xs font-bold text-green-600">AUTH: AUTO</span>
+            </div>
+            <!-- 動態訊息會自動在這裡輪播顯示 -->
+            <p id="dynamic-terminal" class="typewriter-text leading-relaxed min-h-[80px]">
+                > 系統初始化中...
+            </p>
+        </div>
+
+        <!-- 輸入區域 (水平排列) -->
+        <div class="w-full grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+            
+            <!-- Input 01：修復部位圖形 (自製圖片下拉選單) -->
+            <div class="flex flex-col relative">
+                <label class="text-xs text-cyan-500 mb-1 ml-1 tracking-widest uppercase">Input 01 (修復部位圖形)</label>
+                
+                <!-- 點擊展開的觸發按鈕 -->
+                <div id="customSelectBtn" class="custom-dropdown input-scifi w-full p-3 rounded-sm text-center font-bold tracking-wider flex items-center justify-between" onclick="toggleDropdown()">
+                    <span id="selectedText">-- 選擇修復部位圖形 --</span>
+                    <span class="text-cyan-400 text-xs">▼</span>
+                </div>
+
+                <!-- 下拉選項清單 (您可以在此替換 src="您的圖片網址或檔案路徑") -->
+                <div id="dropdownOptions" class="dropdown-options rounded-sm">
+                    <div class="dropdown-item" onclick="selectOption('第一隻外星人的角', 'https://picsum.photos/id/10/50/50')">
+                        <img src="https://picsum.photos/id/10/50/50" alt="選項1">
+                        <span class="text-cyan-300 text-sm font-bold">第一隻外星人的角</span>
+                    </div>
+                    <div class="dropdown-item" onclick="selectOption('第二隻外星人的角', 'https://picsum.photos/id/20/50/50')">
+                        <img src="https://picsum.photos/id/20/50/50" alt="選項2">
+                        <span class="text-cyan-300 text-sm font-bold">第二隻外星人的角</span>
+                    </div>
+                    <div class="dropdown-item" onclick="selectOption('第三隻外星人的角', 'https://picsum.photos/id/30/50/50')">
+                        <img src="https://picsum.photos/id/30/50/50" alt="選項3">
+                        <span class="text-cyan-300 text-sm font-bold">第三隻外星人的角 (正確答案)</span>
+                    </div>
+                    <div class="dropdown-item" onclick="selectOption('第四隻外星人的角', 'https://picsum.photos/id/40/50/50')">
+                        <img src="https://picsum.photos/id/40/50/50" alt="選項4">
+                        <span class="text-cyan-300 text-sm font-bold">第四隻外星人的角</span>
+                    </div>
+                </div>
+
+                <!-- 隱藏的 input 用於給 JS 驗證讀取 -->
+                <input type="hidden" id="input1" value="">
+            </div>
+
+            <!-- Input 02：最大能源線路顏色 (下拉選單) -->
+            <div class="flex flex-col">
+                <label class="text-xs text-cyan-500 mb-1 ml-1 tracking-widest uppercase">Input 02</label>
+                <select id="input2" class="input-scifi w-full p-3 rounded-sm text-center font-bold tracking-wider cursor-pointer">
+                    <option value="" disabled selected>-- 選擇顏色 --</option>
+                    <option value="紅色">紅色</option>
+                    <option value="藍色">藍色</option>
+                    <option value="綠色">綠色</option>
+                    <option value="黃色">黃色</option> <!-- 正確答案 -->
+                </select>
+            </div>
+
+            <div class="flex flex-col">
+                <label class="text-xs text-cyan-500 mb-1 ml-1 tracking-widest uppercase">Input 03</label>
+                <input type="text" id="input3" placeholder="發動指令(數字)" class="input-scifi w-full p-3 rounded-sm text-center font-bold tracking-wider">
+            </div>
+            <div class="flex flex-col">
+                <label class="text-xs text-cyan-500 mb-1 ml-1 tracking-widest uppercase">Input 04</label>
+                <input type="text" id="input4" placeholder="寶藏啟動密碼(數字)" class="input-scifi w-full p-3 rounded-sm text-center font-bold tracking-wider">
+            </div>
+        </div>
+
+        <!-- 驗證按鈕 -->
+        <button onclick="verifyAccess()" class="btn-scifi px-12 py-4 text-lg font-bold tracking-widest uppercase relative overflow-hidden group">
+            <span class="relative z-10">驗證</span>
+        </button>
+
+        <!-- 訊息回饋區 -->
+        <div id="message-container" class="mt-8 w-full max-w-2xl hidden transition-all duration-300">
+            <!-- 訊息內容透過 JS 注入 -->
+        </div>
+
+    </main>
+
+    <!-- 底部裝飾 -->
+    <div class="mt-8 text-cyan-800 text-xs font-mono tracking-widest opacity-50 text-center">
+        &copy; oneheart_ntnu. ALL RIGHTS RESERVED.<br>
+        SECURE CONNECTION ESTABLISHED.
+    </div>
+
+    <script>
+        // ==========================================
+        // 圖片下拉選單互動控制
+        // ==========================================
+        function toggleDropdown() {
+            const options = document.getElementById('dropdownOptions');
+            options.classList.toggle('show');
+        }
+
+        function selectOption(value, imgSrc) {
+            // 設定隱藏 input 的值供驗證用
+            document.getElementById('input1').value = value;
+            
+            // 更新按鈕顯示的文字與小圖片
+            const btnText = document.getElementById('selectedText');
+            btnText.innerHTML = `<div class="flex items-center"><img src="${imgSrc}" style="width:24px; height:24px; margin-right:8px; border-radius:2px;"><span>${value}</span></div>`;
+            
+            // 關閉下拉選單
+            document.getElementById('dropdownOptions').classList.remove('show');
+        }
+
+        // 點擊畫面其他地方時關閉下拉選單
+        window.addEventListener('click', function(e) {
+            if (!document.getElementById('customSelectBtn').contains(e.target) && !document.getElementById('dropdownOptions').contains(e.target)) {
+                document.getElementById('dropdownOptions').classList.remove('show');
+            }
+        });
+
+        // ==========================================
+        // 音效系統 (使用瀏覽器內建 Web Audio API 發出科幻音效)
+        // ==========================================
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        // 播放成功音效 (高亢且愉快的雙音階登入成功聲)
+        function playSuccessSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+                
+                const osc1 = audioCtx.createOscillator();
+                const gain1 = audioCtx.createGain();
+                osc1.type = 'sine';
+                osc1.frequency.setValueAtTime(523.25, now); // C5
+                osc1.frequency.setValueAtTime(659.25, now + 0.1); // E5
+                osc1.frequency.setValueAtTime(783.99, now + 0.2); // G5
+                osc1.frequency.setValueAtTime(1046.50, now + 0.3); // C6
+
+                gain1.gain.setValueAtTime(0.2, now);
+                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.6);
+
+                osc1.connect(gain1);
+                gain1.connect(audioCtx.destination);
+
+                osc1.start(now);
+                osc1.stop(now + 0.6);
+            } catch (e) {
+                console.log("Audio not supported or blocked", e);
+            }
+        }
+
+        // 播放錯誤音效 (低沉急促的警報嗶嗶聲)
+        function playErrorSound() {
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                for (let i = 0; i < 2; i++) {
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(150, now + (i * 0.15));
+                    
+                    gain.gain.setValueAtTime(0.25, now + (i * 0.15));
+                    gain.gain.exponentialRampToValueAtTime(0.001, now + (i * 0.15) + 0.12);
+
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+
+                    osc.start(now + (i * 0.15));
+                    osc.stop(now + (i * 0.15) + 0.12);
+                }
+            } catch (e) {
+                console.log("Audio not supported or blocked", e);
+            }
+        }
+
+        // ==========================================
+        // 動態訊息系統設定
+        // ==========================================
+        const messages = [
+            "> 用戶ID: 5107 已成功登入安全終端機。<br>> 系統自檢完成：發現主動力艙不明損壞！",
+            "> 工程部回報：必須輸入『修復部位圖形』、『最大能源線路顏色』、『發動指令』與『寶藏啟動密碼』。",
+            "> ⚠️ 警告：35分鐘後將自動啟動全艦自毀模式，請盡速完成解碼！",
+            "> 提示：切勿亂驗證，以免加速系統過載或觸發安全鎖定！",
+            "> 總部無線電：指揮官，請仔細檢查各項線索，我們正在等待您的好消息...",
+            "> 指揮官：幫我找到臥底是誰...",
+            "> 在非洲，每一分鐘就有60秒過去",
+            "> 好 那今天呢 風光明媚風和日麗 因爲我以前在唸書的時候 我常常覺得很奇怪就是我到學校然後看他們吃什麼早餐都是吃一份蛋餅配一杯奶茶 或是 一個漢堡配一杯奶茶 或是一份蘿蔔糕配一杯奶茶 每次吃完都說啊我吃飽了我心裡就想說這真的可以吃飽？因爲你知道我通常早餐我都點3份可能 3個 我想說這樣就能吃飽？一定是唬人的嘛 我才想到說大家都是要面子的 沒有沒有 我都帶好幾份去吃 那是你嘛 你不要臉嘛 我說正常的 我就想說 不行 我們一定要做個企劃 就是有一天要讓自己的胃滿足 大滿足 所以今天的企劃就是 早餐吃到飽",
+            "> 鼎王一桌4個人低消650元任你吃啊，一個150元湯底，再點個50元的油條，就坐在那邊吃，不用受那個鳥氣，白飯無限盛啊！若飯不夠，店員會跟你90度鞠躬，「貴賓對不起，我們現在白飯在煮，需要等一下，不好意思，貴賓」。我去 過鼎王啊！這種態度的啊！鼎王把你當貴賓，點菜的、送菜的還是個美女，不吃飯還有得看，喝完水「欸，我要水」冰水一壺，去鼎王我是不點飲料的啊，冰水一壺冰水一壺冰水一壺，豆腐鴨血豆腐鴨血豆腐鴨血冰水冰水冰水冰水就吃飽啦，冰水無限喝，烏梅湯一壺120，早就給拒絕了",
+            "> 你從桃園新竹，我開去高雄吃麻油雞！ 好，你從…… 你從新竹… 你從桃園… 你從… 你從… 你從桃園新竹！你從桃園新竹！你從桃園新竹！ 好，你從桃園新竹…… 你從桃園新竹！你從桃園新竹！你從桃園新竹！你從桃園新竹！你從桃園新竹！你從桃園新竹到台北吃麻油雞！ 聽到了，從桃園新竹，聽到了。 （偷笑）好，你從桃園新竹要開車吃麻油雞到台北，然後你吃完麻油雞跟朋友唱歌，然後你說你會搭計程車回桃園新竹！ 好啦，隨便啦，我沒有辦法和你溝通。 "   
+        ];
+
+        let currentMsgIndex = 0;
+        const terminalEl = document.getElementById('dynamic-terminal');
+
+        function rotateTerminalMessage() {
+            terminalEl.innerHTML = messages[currentMsgIndex];
+            currentMsgIndex = (currentMsgIndex + 1) % messages.length;
+        }
+
+        rotateTerminalMessage();
+        setInterval(rotateTerminalMessage, 5000);
+
+        // ==========================================
+        // 驗證邏輯
+        // ==========================================
+        function verifyAccess() {
+            const val1 = document.getElementById('input1').value.trim();
+            const val2 = document.getElementById('input2').value.trim();
+            const val3 = document.getElementById('input3').value.trim();
+            const val4 = document.getElementById('input4').value.trim();
+            
+            const messageContainer = document.getElementById('message-container');
+            
+            // 正確答案設定
+            const ans1 = '第三隻外星人的角';
+            const ans2 = '黃色';
+            const ans3 = '2026';
+            const ans4 = '67236623';
+
+            messageContainer.classList.remove('hidden');
+
+            if (val1 === ans1 && val2 === ans2 && val3 === ans3 && val4 === ans4) {
+                // 播放成功音效
+                playSuccessSound();
+
+                // 成功狀態
+                messageContainer.innerHTML = `
+                    <div class="message-box bg-green-900/40 border border-green-400 p-6 text-center shadow-[0_0_20px_rgba(34,197,94,0.6)] animate-pulse relative overflow-hidden">
+                        <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-green-400 to-transparent opacity-50 animate-pulse"></div>
+                        <h2 class="text-2xl sm:text-4xl font-black text-green-400 tracking-widest text-shadow-[0_0_10px_rgba(34,197,94,0.8)]">密碼正確 飛船已啟動</h2>
+                        <p class="text-green-300 mt-2 text-sm font-mono tracking-widest">SYSTEM ONLINE // ENGINES IGNITED // ENJOY THE RIDE</p>
+                    </div>
+                `;
+                document.querySelector('.panel-container').style.boxShadow = "0 0 50px rgba(34, 197, 94, 0.4), inset 0 0 30px rgba(34, 197, 94, 0.2)";
+                document.querySelector('.panel-container').style.borderColor = "rgba(34, 197, 94, 0.6)";
+            } else {
+                // 播放錯誤警報音效
+                playErrorSound();
+
+                // 失敗/警告狀態
+                messageContainer.innerHTML = `
+                    <div class="message-box bg-red-900/40 border border-red-500 p-6 text-center shadow-[0_0_20px_rgba(239,68,68,0.6)] relative overflow-hidden">
+                         <div class="absolute inset-0 bg-red-500/10 pointer-events-none" style="animation: blink 0.5s infinite;"></div>
+                        <h2 class="text-xl sm:text-2xl font-black text-red-500 tracking-widest text-shadow-[0_0_10px_rgba(239,68,68,0.8)]">警告：密碼錯誤，拒絕存取</h2>
+                        <p class="text-red-300 mt-2 text-sm font-mono tracking-widest">ERROR CODE: 0xDEADBEEF // PLEASE CHECK THE LOGS</p>
+                    </div>
+                `;
+                document.querySelector('.panel-container').style.boxShadow = "0 0 50px rgba(239, 68, 68, 0.4), inset 0 0 30px rgba(239, 68, 68, 0.2)";
+                document.querySelector('.panel-container').style.borderColor = "rgba(239, 68, 68, 0.6)";
+                
+                // 短暫震動效果
+                const panel = document.querySelector('.panel-container');
+                panel.animate([
+                    { transform: 'translateX(0)' },
+                    { transform: 'translateX(-10px)' },
+                    { transform: 'translateX(10px)' },
+                    { transform: 'translateX(-10px)' },
+                    { transform: 'translateX(10px)' },
+                    { transform: 'translateX(0)' }
+                ], { duration: 400, easing: 'ease-in-out' });
+            }
+        }
+    </script>
+</body>
+</html>
